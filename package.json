@@ -1,0 +1,20 @@
+{
+  "name": "{{WORKER_NAME}}",
+  "version": "0.1.0",
+  "description": "{{WORKER_DESCRIPTION}}",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "NODE_ENV=development node --watch src/index.js"
+  },
+  "dependencies": {
+    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.11.0",
+    "@openrouter/ai-sdk-provider": "^2.8.0",
+    "ai": "^6.0.168",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
