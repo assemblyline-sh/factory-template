@@ -9,7 +9,7 @@
     "dev": "NODE_ENV=development node --watch src/index.js"
   },
   "dependencies": {
-    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.12.0",
+    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.13.0",
     "@openrouter/ai-sdk-provider": "^2.8.0",
     "ai": "^6.0.168",
     "dotenv": "^16.3.1"
