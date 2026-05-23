@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Customer worker for the **"{{ORG_NAME}}" org**. Executes org-specific custom steps (e.g. `{{ORG_NAME}}/fetch_data`) for the Cashflowy orchestrator. Polls the orchestrator for tasks and reports completion. Sends `X-Worker-Org: {{ORG_NAME}}` header when polling.
+Customer worker for the **"{{ORG_NAME}}" org**, deployed at location `{{LOCATION}}`. Executes org-specific custom steps (e.g. `fetch_data`, `extract_invoice`) for the Cashflowy orchestrator. Polls the orchestrator for tasks and reports completion. Sends `X-Location: {{LOCATION}}` header when polling.
 
 ### Related Repositories
 
@@ -29,7 +29,7 @@ import { defineStep, attachDocument } from '@fob/lib-worker';
 import { z } from 'zod';
 
 export default defineStep({
-  slug: '{{ORG_NAME}}/my_step',
+  slug: 'my_step',
   name: 'My Step',
   description: 'What this step does',
 
@@ -40,7 +40,7 @@ export default defineStep({
     const { work_record, step } = context;
 
     // 1. Access previous step outputs by slug
-    const prev = work_record.step_outputs['{{ORG_NAME}}/previous_step'];
+    const prev = work_record.step_outputs['previous_step'];
     if (!prev) {
       throw new Error('Required data not found');
     }
@@ -59,15 +59,17 @@ export default defineStep({
 
 ### Shared Libraries
 
+- `@fob/lib-worker` — Core worker framework: polling loop, `defineStep()`, orchestrator integration, templates, file/path utils
+- `@fob/lib-worker-ai` — LLM structured generation via OpenRouter (`extractDocument()`, `generateStructured()`)
 - `@fob/lib-worker-google` — Google Sheets + Drive API wrappers, generic sheet sync engine
 - `@fob/lib-worker-llmwhisperer` — LLMWhisperer PDF text extraction API client
+- `@fob/lib-worker-erpnext` — ERPNext/Frappe REST client
+- `@fob/lib-worker-statements` — statements.finopsbricks.com API client
+- `@fob/lib-worker-email` — Email sending via Zepto Mail
 
 ### Utilities (`src/utils/`)
 
 - `work-area.js` — Centralized path resolution for all data directories (`dirs`, `processingDir()`)
-- `orchestrator-api.js` — REST client for orchestrator API (`findItemByExternalId()`, `createItem()`, `runProcess()`)
-- `ai.js` — LLM structured generation with Zod schema validation (`generateStructured()`, `extractDocument()`)
-- `render-local.js` — Render co-located EJS templates (`renderLocal()`)
 - `customer.config.js` — Company identity config (name, GSTIN) at project root
 
 ## Configuration
@@ -78,6 +80,7 @@ Environment variables (see `.env.example`):
 |----------|----------|---------|---------|
 | `ORCHESTRATOR_API_KEY` | Yes | — | Orchestrator API key |
 | `ORCHESTRATOR_API_SECRET` | Yes | — | Orchestrator API secret |
+| `WORKER_LOCATION` | Yes | — | Location code for task routing (e.g., `{{LOCATION}}`) |
 | `ORCHESTRATOR_URL` | No | `http://localhost:4005` | Orchestrator server URL |
 | `POLL_INTERVAL_MS` | No | `2000` | Polling frequency (ms) |
 | `WORK_AREA_PATH` | No | `<project_root>/work_area` | Root path for all data directories |
@@ -89,17 +92,23 @@ Environment variables (see `.env.example`):
 Add these to `package.json` as needed:
 
 ```bash
+# LLM / AI structured generation
+npm install @fob/lib-worker-ai@file:../../lib/lib-worker-ai
+
 # Google Sheets/Drive integration
 npm install @fob/lib-worker-google@file:../../lib/lib-worker-google
 
 # PDF text extraction
 npm install @fob/lib-worker-llmwhisperer@file:../../lib/lib-worker-llmwhisperer
 
-# LLM / AI (already included in base template)
-# @openrouter/ai-sdk-provider and ai are pre-installed
-
 # ERPNext integration
 npm install @fob/lib-worker-erpnext@file:../../lib/lib-worker-erpnext
+
+# Statements app API client
+npm install @fob/lib-worker-statements@file:../../lib/lib-worker-statements
+
+# Email sending (Zepto Mail)
+npm install @fob/lib-worker-email@file:../../lib/lib-worker-email
 
 # Database (SQLite)
 npm install sequelize sqlite3
@@ -126,6 +135,6 @@ Key topics:
 
 - **Variables**: snake_case (e.g., `work_record_id`, `step_outputs`)
 - **Functions**: camelCase (e.g., `calculateDailyBalances()`, `attachDocument()`)
-- **Step Types**: `org/step_name` format (e.g., `{{ORG_NAME}}/fetch_data`)
+- **Step Slugs**: Identity-only, no prefix (e.g., `fetch_data`, `extract_invoice`). Routing handled by `location` field in process definitions
 - **ES Modules**: `import`/`export` throughout, `"type": "module"` in package.json
 - **Minimal dependencies**: Only `dotenv` — uses native `fetch` for HTTP
