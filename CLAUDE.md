@@ -120,16 +120,12 @@ npm install md-to-pdf pdf-lib
 npm install exceljs
 ```
 
-## Standards Reference
+## Documentation
 
-### Accounting Process Standards (Primary)
-
-**Location**: `/Users/alex/ec2code/finopsbricks/accounting-process-standards`
-
-Key topics:
-- **Principles**: `deterministic-before-llm.md`, `audit-trail-first.md`, `structured-checks.md`, `step-independence.md`
-- **Architecture**: `system-layers.md`, `orchestrator-integration.md`, `system-of-record-integration.md`
-- **Steps**: `step-handler-pattern.md`, `step-output-contract.md`, `document-attachment.md`, `check-structure.md`
+- **FDE Handbook** (step patterns, process design, capabilities, library APIs): `/Users/alex/ec2code/finopsbricks/fde-handbook/`
+- **Platform Handbook** (architecture, operations, internals): `/Users/alex/ec2code/finopsbricks/platform-handbook/`
+- **CFO Handbook** (domain expertise, accounting best practices): `/Users/alex/ec2code/finopsbricks/cfo-handbook/`
+- **Engineering Standards** (JS, testing, git conventions): `/Users/alex/ec2code/alex/engineering-standards/`
 
 ### Key Standards Applied
 
