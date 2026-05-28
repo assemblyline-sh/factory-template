@@ -122,10 +122,10 @@ npm install exceljs
 
 ## Documentation
 
-- **FDE Handbook** (step patterns, process design, capabilities, library APIs): `/Users/alex/ec2code/finopsbricks/fde-handbook/`
-- **Platform Handbook** (architecture, operations, internals): `/Users/alex/ec2code/finopsbricks/platform-handbook/`
-- **CFO Handbook** (domain expertise, accounting best practices): `/Users/alex/ec2code/finopsbricks/cfo-handbook/`
-- **Engineering Standards** (JS, testing, git conventions): `/Users/alex/ec2code/alex/engineering-standards/`
+- **FDE Handbook** (`fde-handbook`) — step patterns, process design, capabilities, library APIs
+- **Platform Handbook** (`platform-handbook`) — platform architecture, operations, internals
+- **CFO Handbook** (`cfo-handbook`) — domain expertise, accounting best practices
+- **Engineering Standards** (`engineering-standards`) — JS, testing, git conventions
 
 ### Key Standards Applied
 
