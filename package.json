@@ -6,12 +6,21 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "NODE_ENV=development node --watch src/index.js"
+    "dev": "NODE_ENV=development node --watch src/index.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+    "typecheck": "tsc -p jsconfig.json",
+    "typecheck:watch": "tsc -p jsconfig.json --watch"
   },
   "dependencies": {
-    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.22.0",
+    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.25.0",
     "dotenv": "^16.3.1",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "typescript": "^5.5.0"
   },
   "engines": {
     "node": ">=18.0.0"

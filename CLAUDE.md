@@ -4,73 +4,129 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Customer worker for the **"{{ORG_NAME}}" org**, deployed at location `{{LOCATION}}`. Executes org-specific custom steps (e.g. `fetch_data`, `extract_invoice`) for the Cashflowy orchestrator. Polls the orchestrator for tasks and reports completion. Sends `X-Location: {{LOCATION}}` header when polling.
+Customer worker for the **"{{ORG_NAME}}" org**, deployed at location `{{LOCATION}}`. Executes org-specific custom steps for the Cashflowy orchestrator. Polls the orchestrator for tasks and reports completion. Sends `X-Location: {{LOCATION}}` header when polling.
+
+See `README.md` for setup instructions.
 
 ### Related Repositories
 
-This repo is a **customer worker**. The sibling repos live under the same parent directory:
+This repo is a **customer worker**. Part of the **FinOpsBricks** monorepo:
 
-- **`orchestrator.finopsbricks.com`** — The orchestrator (Next.js). Defines processes, manages work records, dispatches tasks to workers, and stores results.
-- **`process-engine-core-worker`** — Fobrix-maintained worker that executes built-in step types (`http_request`, etc.).
+- **`apps/orchestrator.finopsbricks.com`** — Process orchestrator. Defines processes, dispatches tasks to workers, stores work records. This worker polls it for tasks.
+- **`lib/lib-worker`** — Shared worker infrastructure (`@fob/lib-worker`). Provides `defineStep()`, `discoverSteps()`, `startWorker()`, orchestrator client, conveyor steps, template helpers.
+- **`workers/*`** — Other customer-specific workers (sibling directories).
+- **`cli/`** — Developer CLI (`fob`) for debugging steps locally and managing stations.
+- **`fde-handbook`** — step patterns, station/line design, capabilities, library APIs.
+- **`platform-handbook`** — platform architecture, operations, internals.
+- **`cfo-handbook`** — domain expertise, accounting best practices.
+- **`engineering-standards`** — JS, testing, git conventions.
 
 ## Common Development Commands
 
-- **Development**: `npm run dev` — Run worker with `NODE_ENV=development` and file watching. Writes artefacts to `temp/work_records/` for local inspection.
+- **Development**: `npm run dev` — Run worker with `NODE_ENV=development` and file watching. Bins live under `temp/stations/{STATION}/{input,doing,output,done,failed}/`.
 - **Production**: `npm start` — Run worker in production mode.
+- **Tests**: `npm test` — Run Jest tests (`tests/**/*.test.js`).
+- **Type check**: `npm run typecheck` — Validates JSDoc types via `jsconfig.json` (`checkJs: true`).
 
 ## Architecture
 
+### Vocabulary
+
+- **Line** — a sequence of one or more stations that together perform a business workflow (e.g. AP, VM).
+- **Station** — one orchestrator process. Has a `short_code` (e.g. `P8`, `VM3`, `AP2`), a `line`, and a sequence of `steps`. Defined in `.orchestrator/stations/{STATION}.json`.
+- **Verb-step** — one handler within a station, defined via `defineStep()`. Sequential steps in a single station share in-memory `step_outputs` against one work record.
+- **Conveyor** — multi-station lines pass workpiece bundles via filesystem bins (`temp/stations/{STATION}/{input,doing,output,done,failed}/`). Step 0 of every non-head station is `lib-worker:move_files` pulling from the upstream station's `output/done` bins.
+
+See FDE handbook:
+- `station-design/station-definition-schema.md` — station JSON schema
+- `step-patterns/step-handler-pattern.md` — defineStep contract
+- `patterns/structural/schedule-conveyor.md` — multi-station conveyor mechanics
+- `naming/step-folder-convention.md` — folder naming
+
+### Step Folder Convention
+
+Verb-steps live under `src/steps/{SHORT_CODE}__{station_slug}/`. Each handler file is `{SHORT_CODE}_{NN}_{name}.js` and exports a `defineStep()` with matching slug. EJS templates (`report.md`, `*.prompt.md`, `*.doc.md`) co-locate with their handler. Execution order comes from the station JSON's `steps[]` array, not from file numbering.
+
 ### Step Handler Pattern
 
-Each step uses `defineStep()` with typed schemas:
-
 ```javascript
-import { defineStep, attachDocument } from '@fob/lib-worker';
+import { defineStep, attachReport, renderLocal } from '@fob/lib-worker';
 import { z } from 'zod';
 
 export default defineStep({
-  slug: 'my_step',
-  name: 'My Step',
+  slug: 'MY1_01_do_thing',
+  name: 'Do thing',
   description: 'What this step does',
 
   inputSchema: z.object({}),
-  outputSchema: z.object({ field1: z.string(), field2: z.number() }),
+  outputSchema: z.object({ result_count: z.number() }),
 
   execute: async (config, context) => {
     const { work_record, step } = context;
 
     // 1. Access previous step outputs by slug
-    const prev = work_record.step_outputs['previous_step'];
-    if (!prev) {
-      throw new Error('Required data not found');
-    }
+    const prev = work_record.step_outputs['MY1_00_fetch_data'];
 
-    // 2. Do work (fetch, compute, validate)
-    const result = await computeResult(...);
+    // 2. Do work
+    const result = await computeResult(prev);
 
-    // 3. Attach supporting document
-    await attachDocument(work_record.id, 'Title', markdown, step.slug);
+    // 3. Attach co-located EJS report
+    const markdown = renderLocal(import.meta.url, './report.md', result);
+    await attachReport(work_record.id, 'Result summary', markdown, step.slug);
 
     // 4. Return structured output
-    return { field1, field2 };
+    return { result_count: result.items.length };
   },
 });
 ```
 
+### Station JSON
+
+```json
+{
+  "short_code": "MY1",
+  "line": "MY",
+  "name": "do_thing",
+  "is_enabled": true,
+  "location": "{{LOCATION}}",
+  "schedule_cron": "*/5 * * * *",
+  "schedule_enabled": true,
+  "steps": [
+    { "slug": "lib-worker:move_files", "config": { "source_bin": "MY0/output", "target_bin": "MY1/input" } },
+    { "slug": "MY1_01_do_thing", "config": {} }
+  ]
+}
+```
+
+Push stations with `fob stations push --all` (CLI in `cli/`).
+
 ### Shared Libraries
 
-- `@fob/lib-worker` — Core worker framework: polling loop, `defineStep()`, orchestrator integration, templates, file/path utils
-- `@fob/lib-worker-ai` — LLM structured generation via OpenRouter (`extractDocument()`, `generateStructured()`)
-- `@fob/lib-worker-google` — Google Sheets + Drive API wrappers, generic sheet sync engine
-- `@fob/lib-worker-llmwhisperer` — LLMWhisperer PDF text extraction API client
-- `@fob/lib-worker-erpnext` — ERPNext/Frappe REST client
-- `@fob/lib-worker-statements` — statements.finopsbricks.com API client
-- `@fob/lib-worker-email` — Email sending via Zepto Mail
+Always installed:
 
-### Utilities (`src/utils/`)
+- `@fob/lib-worker` — Core worker framework: polling loop, `defineStep()`, `discoverSteps()`, orchestrator client (`attachDocument`, `attachReport`, `findItemByExternalId`, `createItem`, `findOrCreateItem`, `runProcess`), conveyor steps (`moveFilesStep`, `splitBundlesStep`), template helper (`renderLocal`).
 
-- `work-area.js` — Centralized path resolution for all data directories (`dirs`, `processingDir()`)
-- `customer.config.js` — Company identity config (name, GSTIN) at project root
+Optional — add to `package.json` as needed:
+
+```bash
+# LLM structured generation via OpenRouter
+npm install @fob/lib-worker-ai@github:finopsbricks/lib-worker-ai#v0.1.0
+
+# Google Sheets + Drive
+npm install @fob/lib-worker-google@github:finopsbricks/lib-worker-google#v0.1.0
+
+# PDF text extraction
+npm install @fob/lib-worker-llmwhisperer@github:finopsbricks/lib-worker-llmwhisperer#v0.4.0
+
+# ERPNext / Frappe REST client
+npm install @fob/lib-worker-erpnext@github:finopsbricks/lib-worker-erpnext#v0.1.0
+
+# Email sending (Zepto Mail)
+npm install @fob/lib-worker-email@github:finopsbricks/lib-worker-email#v0.1.0
+
+# statements.finopsbricks.com client
+npm install @fob/lib-worker-statements@github:finopsbricks/lib-worker-statements#v0.1.0
+```
 
 ## Configuration
 
@@ -80,57 +136,43 @@ Environment variables (see `.env.example`):
 |----------|----------|---------|---------|
 | `ORCHESTRATOR_API_KEY` | Yes | — | Orchestrator API key |
 | `ORCHESTRATOR_API_SECRET` | Yes | — | Orchestrator API secret |
-| `WORKER_LOCATION` | Yes | — | Location code for task routing (e.g., `{{LOCATION}}`) |
-| `ORCHESTRATOR_URL` | No | `http://localhost:4005` | Orchestrator server URL |
+| `WORKER_LOCATION` | Yes | — | Location code for task routing (e.g., `{{LOCATION}}`) — sent as `X-Location` header |
+| `ORCHESTRATOR_URL` | No | `http://localhost:3000` | Orchestrator server URL |
 | `POLL_INTERVAL_MS` | No | `2000` | Polling frequency (ms) |
-| `WORK_AREA_PATH` | No | `<project_root>/work_area` | Root path for all data directories |
-| `OPENROUTER_API_KEY` | No | — | OpenRouter API key (for LLM steps) |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` | No | — | Base64-encoded Google service account JSON |
 
-## Optional Dependencies
+## Debugging Steps Locally
 
-Add these to `package.json` as needed:
+Use the `fob` CLI:
 
 ```bash
-# LLM / AI structured generation
-npm install @fob/lib-worker-ai@file:../../lib/lib-worker-ai
+# List available steps
+fob steps list
 
-# Google Sheets/Drive integration
-npm install @fob/lib-worker-google@file:../../lib/lib-worker-google
+# Run one step (output saved to temp/)
+fob steps run {{LOCATION}}/MY1__do_thing/MY1_01_do_thing
 
-# PDF text extraction
-npm install @fob/lib-worker-llmwhisperer@file:../../lib/lib-worker-llmwhisperer
-
-# ERPNext integration
-npm install @fob/lib-worker-erpnext@file:../../lib/lib-worker-erpnext
-
-# Statements app API client
-npm install @fob/lib-worker-statements@file:../../lib/lib-worker-statements
-
-# Email sending (Zepto Mail)
-npm install @fob/lib-worker-email@file:../../lib/lib-worker-email
-
-# Database (SQLite)
-npm install sequelize sqlite3
-
-# PDF generation
-npm install md-to-pdf pdf-lib
-
-# Excel generation
-npm install exceljs
+# Watch a line / station / workpiece
+fob lines status MY
+fob workpieces watch <id>
 ```
 
-## Documentation
-
-- **FDE Handbook** (`fde-handbook`) — step patterns, process design, capabilities, library APIs
-- **Platform Handbook** (`platform-handbook`) — platform architecture, operations, internals
-- **CFO Handbook** (`cfo-handbook`) — domain expertise, accounting best practices
-- **Engineering Standards** (`engineering-standards`) — JS, testing, git conventions
-
-### Key Standards Applied
+## Key Standards Applied
 
 - **Variables**: snake_case (e.g., `work_record_id`, `step_outputs`)
 - **Functions**: camelCase (e.g., `calculateDailyBalances()`, `attachDocument()`)
-- **Step Slugs**: Identity-only, no prefix (e.g., `fetch_data`, `extract_invoice`). Routing handled by `location` field in process definitions
+- **Verb-step slugs**: `{SHORT_CODE}_{NN}_{name}` (e.g., `AP2_01_extract`)
 - **ES Modules**: `import`/`export` throughout, `"type": "module"` in package.json
-- **Minimal dependencies**: Only `dotenv` — uses native `fetch` for HTTP
+- **Type checking**: JSDoc + `@ts-check` enforced via `jsconfig.json` (`checkJs: true`)
+- **Tests**: Jest, ESM (`--experimental-vm-modules`), 80% coverage targets
+- **Station design**: Deterministic checks before LLM analysis; attach supporting documents at each verb-step
+
+## Communication Style Guidelines
+
+### Critical Thinking Expected
+- Evaluate suggestions objectively — don't default to agreement
+- Question technical decisions — ask about trade-offs, alternatives, and implications
+- Point out potential issues — identify risks, complexity, or better approaches
+
+### Avoid Excessive Praise
+- Focus on technical merit rather than praise
+- Be direct and honest — if something seems problematic, say so
