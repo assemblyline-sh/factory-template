@@ -14,7 +14,7 @@
     "typecheck:watch": "tsc -p jsconfig.json --watch"
   },
   "dependencies": {
-    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.25.0",
+    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.30.0",
     "dotenv": "^16.3.1",
     "zod": "^4.3.6"
   },
