@@ -92,7 +92,7 @@ Push stations with `fob-orc stations push --all`.
 
 Always installed:
 
-- `@fob/lib-worker` — Core worker framework: polling loop, `defineStep()`, `discoverSteps()`, orchestrator client (`attachDocument`, `attachReport`, `findItemByExternalId`, `createItem`, `findOrCreateItem`, `runProcess`), conveyor steps (`moveFilesStep`, `splitBundlesStep`), template helper (`renderLocal`).
+- `@fob/lib-worker` — Core worker framework: polling loop, `defineStep()`, `discoverSteps()`, orchestrator client (`attachDocument`, `attachReport`, `attachFile`, `attachWorkpieces`), workpiece helpers (`processWorkpiece`, `logEvent`, `bin`), the conveyor step (`moveFilesStep`), template helper (`renderLocal`).
 
 Optional — add to `package.json` as needed. These repositories are currently private; ask FinOpsBricks for access:
 
@@ -125,7 +125,7 @@ Environment variables (see `.env.example`):
 | `ORCHESTRATOR_API_KEY` | Yes | — | Orchestrator API key |
 | `ORCHESTRATOR_API_SECRET` | Yes | — | Orchestrator API secret |
 | `WORKER_LOCATION` | Yes | — | Location code for task routing (e.g., `{{LOCATION}}`) — sent as `X-Location` header |
-| `ORCHESTRATOR_URL` | No | `http://localhost:3000` | Orchestrator server URL |
+| `ORCHESTRATOR_URL` | No | `http://localhost:3000` | Orchestrator server URL. Use `https://orchestrator.finopsbricks.com` for the hosted Orchestrator |
 | `POLL_INTERVAL_MS` | No | `2000` | Polling frequency (ms) |
 
 ## Debugging Steps Locally
@@ -137,7 +137,7 @@ Use the `fob-worker` CLI (`npm install -g @finopsbricks/fob-worker`):
 fob-worker steps list
 
 # Run one step (output saved to temp/)
-fob-worker steps run {{LOCATION}}/MY1__do_thing/MY1_01_do_thing
+fob-worker steps run MY1_01_do_thing
 
 # Watch a line / station / workpiece
 fob-worker lines status MY
