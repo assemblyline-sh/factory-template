@@ -4,22 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Customer worker for the **"{{ORG_NAME}}" org**, deployed at location `{{LOCATION}}`. Executes org-specific custom steps for the Cashflowy orchestrator. Polls the orchestrator for tasks and reports completion. Sends `X-Location: {{LOCATION}}` header when polling.
+Customer worker for the **"{{ORG_NAME}}" org**, deployed at location `{{LOCATION}}`. Executes org-specific custom steps for the FinOpsBricks Orchestrator. Polls the orchestrator for tasks and reports completion. Sends `X-Location: {{LOCATION}}` header when polling.
 
 See `README.md` for setup instructions.
 
 ### Related Repositories
 
-This repo is a **customer worker**. Part of the **FinOpsBricks** monorepo:
-
-- **`apps/orchestrator.finopsbricks.com`** — Process orchestrator. Defines processes, dispatches tasks to workers, stores work records. This worker polls it for tasks.
-- **`lib/lib-worker`** — Shared worker infrastructure (`@fob/lib-worker`). Provides `defineStep()`, `discoverSteps()`, `startWorker()`, orchestrator client, conveyor steps, template helpers.
-- **`workers/*`** — Other customer-specific workers (sibling directories).
-- **`cli/`** — Developer CLI (`fob`) for debugging steps locally and managing stations.
-- **`fde-handbook`** — step patterns, station/line design, capabilities, library APIs.
-- **`platform-handbook`** — platform architecture, operations, internals.
-- **`cfo-handbook`** — domain expertise, accounting best practices.
-- **`engineering-standards`** — JS, testing, git conventions.
+- **FinOpsBricks Orchestrator** — defines stations and lines, dispatches tasks to workers, stores work records. This worker polls it for tasks.
+- **[`@fob/lib-worker`](https://github.com/finopsbricks/lib-worker)** — shared worker infrastructure. Provides `defineStep()`, `discoverSteps()`, `startWorker()`, the orchestrator client, conveyor steps and template helpers.
+- **[`fob-worker`](https://www.npmjs.com/package/@finopsbricks/fob-worker)** — CLI for running and debugging steps locally and watching lines, stations and workpieces.
+- **[`fob-orc`](https://www.npmjs.com/package/@finopsbricks/fob-orc)** — CLI for pulling and pushing station definitions to the Orchestrator.
 
 ## Common Development Commands
 
@@ -36,12 +30,6 @@ This repo is a **customer worker**. Part of the **FinOpsBricks** monorepo:
 - **Station** — one orchestrator process. Has a `short_code` (e.g. `P8`, `VM3`, `AP2`), a `line`, and a sequence of `steps`. Defined in `.orchestrator/stations/{STATION}.json`.
 - **Verb-step** — one handler within a station, defined via `defineStep()`. Sequential steps in a single station share in-memory `step_outputs` against one work record.
 - **Conveyor** — multi-station lines pass workpiece bundles via filesystem bins (`temp/stations/{STATION}/{input,doing,output,done,failed}/`). Step 0 of every non-head station is `lib-worker:move_files` pulling from the upstream station's `output/done` bins.
-
-See FDE handbook:
-- `station-design/station-definition-schema.md` — station JSON schema
-- `step-patterns/step-handler-pattern.md` — defineStep contract
-- `patterns/structural/schedule-conveyor.md` — multi-station conveyor mechanics
-- `naming/step-folder-convention.md` — folder naming
 
 ### Step Folder Convention
 
@@ -98,7 +86,7 @@ export default defineStep({
 }
 ```
 
-Push stations with `fob stations push --all` (CLI in `cli/`).
+Push stations with `fob-orc stations push --all`.
 
 ### Shared Libraries
 
@@ -106,7 +94,7 @@ Always installed:
 
 - `@fob/lib-worker` — Core worker framework: polling loop, `defineStep()`, `discoverSteps()`, orchestrator client (`attachDocument`, `attachReport`, `findItemByExternalId`, `createItem`, `findOrCreateItem`, `runProcess`), conveyor steps (`moveFilesStep`, `splitBundlesStep`), template helper (`renderLocal`).
 
-Optional — add to `package.json` as needed:
+Optional — add to `package.json` as needed. These repositories are currently private; ask FinOpsBricks for access:
 
 ```bash
 # LLM structured generation via OpenRouter
@@ -142,18 +130,18 @@ Environment variables (see `.env.example`):
 
 ## Debugging Steps Locally
 
-Use the `fob` CLI:
+Use the `fob-worker` CLI (`npm install -g @finopsbricks/fob-worker`):
 
 ```bash
 # List available steps
-fob steps list
+fob-worker steps list
 
 # Run one step (output saved to temp/)
-fob steps run {{LOCATION}}/MY1__do_thing/MY1_01_do_thing
+fob-worker steps run {{LOCATION}}/MY1__do_thing/MY1_01_do_thing
 
 # Watch a line / station / workpiece
-fob lines status MY
-fob workpieces watch <id>
+fob-worker lines status MY
+fob-worker workpieces watch <id>
 ```
 
 ## Key Standards Applied
