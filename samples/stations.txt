@@ -1,0 +1,1 @@
+Each station does one job, and every workpiece is in exactly one place.

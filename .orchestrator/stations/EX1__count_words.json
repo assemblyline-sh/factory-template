@@ -1,0 +1,30 @@
+{
+  "short_code": "EX1",
+  "line": "EX",
+  "name": "count_words",
+  "description": "Conveyor from EX0/output. Per workpiece: count the words in document.txt and write result.json. An empty document fails and lands in EX1/failed.",
+  "steps": [
+    {
+      "name": "Transfer workpieces from EX0",
+      "slug": "lib-factory:move_files",
+      "config": {
+        "batch_size": 10,
+        "source_bin": "EX0/output",
+        "target_bin": "EX1/input"
+      },
+      "description": "Move workpieces from EX0/output/ into EX1/input/."
+    },
+    {
+      "name": "Count words",
+      "slug": "EX1_01_count_words",
+      "config": {},
+      "description": "Count words per workpiece; write result.json. Forward to EX1/output/ on success or EX1/failed/ on error."
+    }
+  ],
+  "dependencies": ["EX0"],
+  "is_enabled": true,
+  "watch_enabled": true,
+  "schedule_cron": "* * * * *",
+  "schedule_timezone": "UTC",
+  "schedule_enabled": false
+}

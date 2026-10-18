@@ -1,0 +1,21 @@
+{
+  "short_code": "EX0",
+  "line": "EX",
+  "name": "intake",
+  "description": "Line-head: one workpiece per text file in samples/ not yet in the intake registry. Seeds EX0/output/{workpiece_id}/ with pointer.json and a copy of the file.",
+  "steps": [
+    {
+      "name": "Intake samples",
+      "slug": "EX0_01_intake",
+      "config": {
+        "source_dir": "samples"
+      },
+      "description": "Seed one workpiece per unseen .txt file in config.source_dir and register it in temp/stations/EX0/intake-registry.jsonl."
+    }
+  ],
+  "dependencies": [],
+  "is_enabled": true,
+  "schedule_cron": "*/5 * * * *",
+  "schedule_timezone": "UTC",
+  "schedule_enabled": false
+}

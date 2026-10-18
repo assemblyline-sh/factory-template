@@ -1,7 +1,7 @@
 {
-  "name": "{{WORKER_NAME}}",
+  "name": "{{FACTORY_NAME}}",
   "version": "0.1.0",
-  "description": "{{WORKER_DESCRIPTION}}",
+  "description": "{{FACTORY_DESCRIPTION}}",
   "type": "module",
   "main": "src/index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "typecheck:watch": "tsc -p jsconfig.json --watch"
   },
   "dependencies": {
-    "@fob/lib-worker": "github:finopsbricks/lib-worker#v0.35.0",
+    "@assemblyline/lib-factory": "file:../../lib/lib-factory",
     "dotenv": "^16.3.1",
     "zod": "^4.3.6"
   },
@@ -24,5 +24,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "license": "MIT"
 }

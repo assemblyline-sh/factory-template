@@ -1,0 +1,6 @@
+{
+  "code": "EX",
+  "name": "Example: word count",
+  "description": "Turns each text file in samples/ into a workpiece, then counts its words. An empty file fails the check and lands in EX1/failed. Delete this line when you add your own.",
+  "location": "{{LOCATION}}"
+}

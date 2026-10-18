@@ -1,14 +1,17 @@
-# worker-template
+# factory-template
 
-A template for a FinOpsBricks Orchestrator worker: a Node.js process that polls the Orchestrator for work and runs your step handlers. Built on [`@fob/lib-worker`](https://github.com/finopsbricks/lib-worker). Follow the steps below to create a new worker from this template.
+The starter for an [Assembly Line](https://assemblyline.sh) factory: a repo of lines and
+stations whose steps run in a factory session against the Orchestrator. Built on
+[`@assemblyline/lib-factory`](https://github.com/assemblyline-sh/lib-factory). It ships one
+example line, `EX`, that turns text files into workpieces and counts their words.
 
-## How to create a new worker
+## How to create a new factory
 
 ### 1. Copy and rename
 
 ```bash
-cp -r worker-template worker-<org_name>
-cd worker-<org_name>
+cp -r factory-template factory-<name>
+cd factory-<name>
 ```
 
 ### 2. Initialize git
@@ -20,28 +23,26 @@ git init
 
 ### 3. Find and replace placeholders
 
-Replace all template placeholders throughout the project:
-
 | Placeholder | Replace with | Example |
 |---|---|---|
 | `{{ORG_NAME}}` | Your org identifier (lowercase) | `acme` |
-| `{{LOCATION}}` | Worker location for orchestrator routing | `acme` |
-| `{{WORKER_NAME}}` | `worker-<org_name>` | `worker-acme` |
-| `{{WORKER_DESCRIPTION}}` | Short description | `Worker for the acme org` |
+| `{{LOCATION}}` | Where this factory runs; lines at this location run here | `acme-office` |
+| `{{FACTORY_NAME}}` | `factory-<name>` | `factory-acme` |
+| `{{FACTORY_DESCRIPTION}}` | Short description | `Factory for the acme org` |
 
 ```bash
 # macOS
-grep -rl '{{ORG_NAME}}' . --include='*.js' --include='*.json' --include='*.md' | xargs sed -i '' 's/{{ORG_NAME}}/your_org/g'
-grep -rl '{{LOCATION}}' . --include='*.js' --include='*.json' --include='*.md' | xargs sed -i '' 's/{{LOCATION}}/your_org/g'
-grep -rl '{{WORKER_NAME}}' . --include='*.js' --include='*.json' --include='*.md' | xargs sed -i '' 's/{{WORKER_NAME}}/worker-your_org/g'
-grep -rl '{{WORKER_DESCRIPTION}}' . --include='*.js' --include='*.json' --include='*.md' | xargs sed -i '' 's/{{WORKER_DESCRIPTION}}/Worker for the your_org org/g'
+grep -rl '{{ORG_NAME}}' . --exclude-dir=node_modules | xargs sed -i '' 's/{{ORG_NAME}}/acme/g'
+grep -rl '{{LOCATION}}' . --exclude-dir=node_modules | xargs sed -i '' 's/{{LOCATION}}/acme-office/g'
+grep -rl '{{FACTORY_NAME}}' . --exclude-dir=node_modules | xargs sed -i '' 's/{{FACTORY_NAME}}/factory-acme/g'
+grep -rl '{{FACTORY_DESCRIPTION}}' . --exclude-dir=node_modules | xargs sed -i '' 's/{{FACTORY_DESCRIPTION}}/Factory for the acme org/g'
 ```
 
 ### 4. Set up environment
 
 ```bash
 cp .env.example .env
-# Fill in credentials in .env
+# Fill in the orchestrator API key and secret
 ```
 
 ### 5. Install dependencies
@@ -50,21 +51,35 @@ cp .env.example .env
 npm install
 ```
 
-### 6. Start building
+### 6. Run the example line
 
-- Add step handlers in `src/steps/{SHORT_CODE}__{station_slug}/` using the `defineStep()` pattern (see CLAUDE.md)
-- Add station JSONs in `.orchestrator/stations/{STATION}.json` and push with `fob-orc stations push --all`
-- Add optional libraries as needed (see "Shared Libraries" in CLAUDE.md)
+```bash
+al-orc lines push --all && al-orc stations push --all   # creates EX, EX0, EX1
+npm run dev                                             # starts a factory session
+al-orc stations run EX0                                 # seeds 3 workpieces from samples/
+al-factory lines status EX                              # watch them move: 2 done, 1 failed
+```
+
+`samples/empty.txt` is empty on purpose: it fails the word count and lands in
+`temp/stations/EX1/failed/` with its error. Delete the `EX` line, its steps and `samples/`
+when you add your own.
+
+### 7. Start building
+
+- Add step handlers in `src/steps/{SHORT_CODE}__{station_slug}/` using `defineStep()` (see
+  CLAUDE.md)
+- Add line and station JSONs in `.orchestrator/lines/` and `.orchestrator/stations/`, and
+  push them with `al-orc lines push --all && al-orc stations push --all`
 - Run with `npm run dev` during development
 
-### 7. Update this README
+### 8. Update this README
 
-Replace this setup guide with a standard worker readme:
+Replace this setup guide with a short factory readme:
 
 ```markdown
-# {{WORKER_NAME}}
+# {{FACTORY_NAME}}
 
-{{WORKER_DESCRIPTION}}. See [CLAUDE.md](CLAUDE.md) for architecture and development details.
+{{FACTORY_DESCRIPTION}}. See [CLAUDE.md](CLAUDE.md) for architecture and development details.
 
 ## Quick Start
 
@@ -78,21 +93,20 @@ npm run dev
 ## Template contents
 
 ```
-├── CLAUDE.md                  # Worker documentation (has placeholders)
+├── CLAUDE.md                  # Factory documentation (has placeholders)
 ├── README.md                  # This file
-├── package.json               # Dependencies and scripts (has placeholders)
-├── jsconfig.json              # JSDoc type-checking (checkJs: true)
-├── jest.config.cjs            # Jest config (ESM, 80% coverage targets)
-├── .env.example               # Environment variable template
-├── .gitignore
-├── src/
-│   ├── index.js               # Worker entry point (polls orchestrator, runs steps)
-│   └── steps/                 # Verb-step folders go here
-├── tests/                     # Jest tests
+├── .env.example               # Environment variables
 ├── .orchestrator/
-│   └── stations/              # Station JSON definitions (push with `fob-orc stations push --all`)
-├── docs/                      # Documentation
-└── scripts/                   # Utility scripts (one-shot tools, backfills)
+│   ├── lines/EX.json          # Example line
+│   └── stations/              # EX0 (intake) and EX1 (count words)
+├── samples/                   # Input for the example line
+├── src/
+│   ├── index.js               # Entry point: factory session + bin watcher
+│   └── steps/                 # One folder per station
+├── tests/example-line.test.js # Runs the example line end to end
+├── docs/
+└── scripts/
 ```
 
-`temp/` is created at runtime and gitignored — that's where bins live (`temp/stations/{STATION}/{input,doing,output,done,failed}/`).
+`temp/` is created at runtime and gitignored. Bins live there:
+`temp/stations/{STATION}/{input,doing,output,done,failed}/`.

@@ -1,5 +1,6 @@
+// @ts-check
 import 'dotenv/config';
-import { startWorker, discoverSteps, createGetHandler, moveFilesStep } from '@fob/lib-worker';
+import { startFactory, startBinWatcher, discoverSteps, createGetHandler, moveFilesStep } from '@assemblyline/lib-factory';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -10,4 +11,5 @@ const steps = {
   [moveFilesStep.slug]: moveFilesStep,
 };
 
-startWorker({ getHandler: createGetHandler(steps), callerUrl: import.meta.url });
+startFactory({ getHandler: createGetHandler(steps), callerUrl: import.meta.url });
+startBinWatcher();
