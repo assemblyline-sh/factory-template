@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **Assembly Line fork** of `~/ec2code/finopsbricks/workers/worker-template` (remote `finopsbricks`), being converted per `engine-fork.md` in the assemblyline.sh repo. Workspace rules: `~/ec2code/assemblyline/CLAUDE.md`.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
