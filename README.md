@@ -61,7 +61,9 @@ al-factory lines status EX                              # watch them move: 2 don
 ```
 
 `samples/empty.txt` is empty on purpose: it fails the word count and lands in
-`temp/stations/EX1/failed/` with its error. Delete the `EX` line, its steps and `samples/`
+`temp/stations/EX1/failed/` with its error. EX0 runs only when you start it, so the factory
+session warns at start that nothing triggers EX0; EX1 starts by itself when EX0's output has
+workpieces. Delete the `EX` line, its steps and `samples/`
 when you add your own.
 
 ### 7. Start building
