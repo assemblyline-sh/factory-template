@@ -7,10 +7,10 @@ example line, `EX`, that turns text files into workpieces and counts their words
 
 ## How to create a new factory
 
-### 1. Copy and rename
+### 1. Clone
 
 ```bash
-cp -r factory-template factory-<name>
+git clone https://github.com/assemblyline-sh/factory-template.git factory-<name>
 cd factory-<name>
 ```
 
