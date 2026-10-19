@@ -20,7 +20,8 @@ See `README.md` for setup instructions.
   conveyor step, workpiece and template helpers.
 - **`factory`** — ships with lib-factory: `npx factory steps list` and
   `npx factory steps run <slug>` run this repo's steps locally (`npm run step -- <slug>`).
-- **`al-factory`** — CLI for watching lines, stations and workpieces in this repo.
+- **`al-control`** — the control room CLI: lines, stations, workpieces and processes, in
+  this repo with `-f .` or on any host (`npm install -g @assemblyline/al-control`).
 - **`al-orc`** — CLI for the Orchestrator: push and pull line and station definitions, run
   stations, read work records.
 
@@ -134,8 +135,8 @@ Environment variables (see `.env.example`):
 npx factory steps list
 npx factory steps run MY1_01_do_thing --station MY1   # output saved to temp/
 npx factory steps run MY1_02_next --scenario small    # reads MY1_01's output from temp/
-al-factory lines status MY
-al-factory workpieces watch <id>
+al-control lines status MY -f .
+al-control workpieces watch <id> -f .
 ```
 
 ## Key Standards Applied

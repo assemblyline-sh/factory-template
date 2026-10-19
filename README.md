@@ -57,7 +57,7 @@ npm install
 al-orc lines push --all && al-orc stations push --all   # creates EX, EX0, EX1
 npm run dev                                             # starts a factory session
 al-orc stations run EX0                                 # seeds 3 workpieces from samples/
-al-factory lines status EX                              # watch them move: 2 done, 1 failed
+al-control lines status EX -f .                         # watch them move: 2 done, 1 failed
 ```
 
 `samples/empty.txt` is empty on purpose: it fails the word count and lands in
