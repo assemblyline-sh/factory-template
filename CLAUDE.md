@@ -126,7 +126,7 @@ Environment variables (see `.env.example`):
 | `ORCHESTRATOR_API_KEY` | Yes | — | Orchestrator API key |
 | `ORCHESTRATOR_API_SECRET` | Yes | — | Orchestrator API secret |
 | `FACTORY_LOCATION` | Yes | — | Where this session runs (e.g. `{{LOCATION}}`); sent as `X-Location` |
-| `ORCHESTRATOR_URL` | No | `http://localhost:3000` | Use `https://orchestrator.assemblyline.sh` for the hosted Orchestrator |
+| `ORCHESTRATOR_URL` | No | `https://orchestrator.assemblyline.sh` | Use `http://localhost:3000` for a local Orchestrator |
 | `POLL_INTERVAL_MS` | No | `2000` | Polling frequency (ms) |
 
 ## Debugging Steps Locally

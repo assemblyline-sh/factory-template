@@ -38,24 +38,39 @@ grep -rl '{{FACTORY_NAME}}' . --exclude-dir=node_modules | xargs sed -i '' 's/{{
 grep -rl '{{FACTORY_DESCRIPTION}}' . --exclude-dir=node_modules | xargs sed -i '' 's/{{FACTORY_DESCRIPTION}}/Factory for the acme org/g'
 ```
 
-### 4. Set up environment
-
-```bash
-cp .env.example .env
-# Fill in the orchestrator API key and secret
-```
-
-### 5. Install dependencies
+### 4. Install dependencies
 
 ```bash
 npm install
+npx factory steps list    # the example steps; runs a step locally with no account
+```
+
+### 5. Connect to the Orchestrator
+
+1. [Sign up](https://orchestrator.assemblyline.sh/signup) and verify your email. Your account
+   comes with an organisation.
+2. In the Orchestrator, open **Settings → API keys** and create a key. The secret is shown
+   only once.
+3. Put the key and secret in `.env`:
+
+```bash
+cp .env.example .env
+# ORCHESTRATOR_API_KEY=...  ORCHESTRATOR_API_SECRET=...
+```
+
+4. Install the CLIs and give al-orc the same key:
+
+```bash
+npm install -g @assemblyline/al-orc @assemblyline/al-control
+al-orc config profiles add acme --api-key <key> --api-secret <secret>
+al-orc status
 ```
 
 ### 6. Run the example line
 
 ```bash
 al-orc lines push --all && al-orc stations push --all   # creates EX, EX0, EX1
-npm run dev                                             # starts a factory session
+npm run dev                                             # in a second terminal: a factory session
 al-orc stations run EX0                                 # seeds 3 workpieces from samples/
 al-control lines status EX -f .                         # watch them move: 2 done, 1 failed
 ```
