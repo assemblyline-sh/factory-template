@@ -72,6 +72,8 @@ when you add your own.
   CLAUDE.md)
 - Add line and station JSONs in `.orchestrator/lines/` and `.orchestrator/stations/`, and
   push them with `al-orc lines push --all && al-orc stations push --all`
+- Run one step on its own: `npx factory steps run <slug> --station <CODE>` (output in
+  `temp/<slug>.json`; attachments stay in `temp/work_records/`)
 - Run with `npm run dev` during development
 
 ### 8. Update this README

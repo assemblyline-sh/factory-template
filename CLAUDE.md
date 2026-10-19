@@ -18,8 +18,9 @@ See `README.md` for setup instructions.
 - **[`@assemblyline/lib-factory`](https://github.com/assemblyline-sh/lib-factory)** — the
   runtime: `defineStep()`, `discoverSteps()`, `startFactory()`, the orchestrator client, the
   conveyor step, workpiece and template helpers.
-- **`al-factory`** — CLI for running and debugging steps locally and watching lines,
-  stations and workpieces in this repo.
+- **`factory`** — ships with lib-factory: `npx factory steps list` and
+  `npx factory steps run <slug>` run this repo's steps locally (`npm run step -- <slug>`).
+- **`al-factory`** — CLI for watching lines, stations and workpieces in this repo.
 - **`al-orc`** — CLI for the Orchestrator: push and pull line and station definitions, run
   stations, read work records.
 
@@ -130,8 +131,9 @@ Environment variables (see `.env.example`):
 ## Debugging Steps Locally
 
 ```bash
-al-factory steps list
-al-factory steps run MY1_01_do_thing        # output saved to temp/
+npx factory steps list
+npx factory steps run MY1_01_do_thing --station MY1   # output saved to temp/
+npx factory steps run MY1_02_next --scenario small    # reads MY1_01's output from temp/
 al-factory lines status MY
 al-factory workpieces watch <id>
 ```
